@@ -1,0 +1,3 @@
+AllCops:
+  AutoCorrect: false
+  TargetRubyVersion: 2.3
