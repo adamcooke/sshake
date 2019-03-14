@@ -83,6 +83,29 @@ describe SSHake::Session do
       end.to raise_error(SSHake::ExecutionError)
     end
 
+    it 'should raise an error if the session is set to raise errors' do
+      session.raise_on_error = true
+      expect do
+        session.execute('exit 1')
+      end.to raise_error(SSHake::ExecutionError)
+    end
+
+    it 'should not raise an error if the session is set to raise errors but the command is not' do
+      session.raise_on_error = true
+      expect do
+        session.execute('exit 1', raise_on_error: false)
+      end.to_not raise_error
+    end
+
+    it 'should not raise an error if the session is set to raise errors but the command is not with block' do
+      session.raise_on_error = true
+      expect do
+        session.execute('exit 1') do |r|
+          r.raise_on_error false
+        end
+      end.to_not raise_error
+    end
+
     it 'should not be successful if not successful' do
       expect do
         result = session.execute('exit 1')

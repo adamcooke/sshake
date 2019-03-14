@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SSHake
   class ExecutionOptionsDSL
     def initialize(options)
@@ -13,8 +15,12 @@ module SSHake
       @options.sudo_password = options[:password]
     end
 
-    def raise_on_error
-      @options.raise_on_error = true
+    def raise_on_error(bool = true)
+      @options.raise_on_error = bool
+    end
+
+    def dont_raise_on_error
+      @options.raise_on_error = false
     end
 
     def stdin(value)

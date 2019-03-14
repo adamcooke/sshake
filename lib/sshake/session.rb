@@ -20,6 +20,11 @@ module SSHake
     # @return [Logger, nil]
     attr_accessor :logger
 
+    # Specify the default behaviour for raising erors
+    #
+    # @return [Boolean]
+    attr_accessor :raise_on_error
+
     # Create a new SSH session
     #
     # @return [Sshake::Session]
@@ -129,7 +134,7 @@ module SSHake
         response.finish_time = Time.now
       end
 
-      if options.raise_on_error? && !response.success?
+      if !response.success? && ((options.raise_on_error.nil? && @raise_on_error) || options.raise_on_error?)
         raise ExecutionError, response
       else
         response
