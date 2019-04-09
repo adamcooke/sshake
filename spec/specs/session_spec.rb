@@ -117,7 +117,8 @@ describe SSHake::Session do
   context '#write_data' do
     it 'should upload files' do
       data = "Hello world! #{SecureRandom.uuid}"
-      session.write_data('/tmp/sshaketestfile', data)
+      result = session.write_data('/tmp/sshaketestfile', data)
+      expect(result).to be true
       read = session.execute('cat /tmp/sshaketestfile')
       expect(read.stdout).to eq data
     end
