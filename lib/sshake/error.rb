@@ -6,7 +6,7 @@ module SSHake
 
   class ExecutionError < Error
     def initialize(response)
-      response
+      @response = response
     end
 
     attr_reader :response
