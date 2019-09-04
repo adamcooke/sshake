@@ -50,8 +50,8 @@ module SSHake
       def execute(commands, options = nil, &block)
         environment = Environment.new(self)
 
-        options = create_options(options, block)
-        environment.command = prepare_commands(commands, options)
+        environment.options = create_options(options, block)
+        environment.command = prepare_commands(commands, environment.options, :add_sudo => false)
 
         command, environment.captures = @command_set.match(environment.command)
 
@@ -60,7 +60,7 @@ module SSHake
         end
 
         response = command.make_response(environment)
-        handle_response(response, options)
+        handle_response(response, environment.options)
       end
 
       def write_data(path, data, options = nil, &block)

@@ -8,6 +8,7 @@ module SSHake
       end
 
       attr_accessor :command
+      attr_accessor :options
       attr_accessor :captures
 
       def store

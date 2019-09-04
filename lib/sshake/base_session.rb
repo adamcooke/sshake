@@ -80,12 +80,12 @@ module SSHake
       end
     end
 
-    def prepare_commands(commands, options)
+    def prepare_commands(commands, execution_options, **options)
       commands = [commands] unless commands.is_a?(Array)
 
       # Map sudo onto command
-      if options.sudo_user
-        commands = add_sudo_to_commands_array(commands, options.sudo_user)
+      if execution_options.sudo_user && options[:add_sudo] != false
+        commands = add_sudo_to_commands_array(commands, execution_options.sudo_user)
       end
 
       # Construct a full command string to execute

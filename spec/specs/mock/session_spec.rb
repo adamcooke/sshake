@@ -71,6 +71,19 @@ describe SSHake::Mock::Session do
       expect { session.execute('ps', :raise_on_error => true) }.to raise_error SSHake::ExecutionError
     end
 
+    it "should handle sudo'd commands" do
+      session.command_set.add("whoami") do |r, env|
+        if env.options.sudo_user
+          r.stdout = env.options.sudo_user
+        else
+          r.stdout = "_nosudo_"
+        end
+      end
+      expect(session.execute('whoami').stdout).to eq '_nosudo_'
+      expect(session.execute('whoami', :sudo => true).stdout).to eq 'root'
+      expect(session.execute('whoami', :sudo => 'dave').stdout).to eq 'dave'
+    end
+
     it "should allow values to be shared between commands on the same session" do
       session.command_set.add(/useradd (\w+)/) do |r, env|
         env.store[:users] ||= []
