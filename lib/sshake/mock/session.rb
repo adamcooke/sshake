@@ -1,3 +1,4 @@
+require 'net/ssh/errors'
 require 'sshake/base_session'
 require 'sshake/mock/command_set'
 require 'sshake/mock/environment'
@@ -12,6 +13,7 @@ module SSHake
       attr_reader :written_files
 
       def initialize(**options)
+        @options = options
         @command_set = options[:command_set] || CommandSet.new
         @store = {}
         @written_files = {}
@@ -19,7 +21,18 @@ module SSHake
       end
 
       def connect
-        @connected = true
+        case @options[:connection_error]
+        when :timeout
+          raise Net::SSH::ConnectionTimeout
+        when :authentication_failed
+          raise Net::SSH::AuthenticationFailed
+        when :connection_refused
+          raise Errno::ECONNREFUSED
+        when :host_unreachable
+          raise Errno::EHOSTUNREACH
+        else
+          @connected = true
+        end
       end
 
       def connected?

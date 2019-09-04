@@ -15,6 +15,28 @@ describe SSHake::Mock::Session do
     expect(session.command_set).to eq command_set
   end
 
+  context '#connect' do
+    it 'should raise connection timeouts' do
+      session = SSHake::Mock::Session.new(:connection_error => :timeout)
+      expect { session.connect }.to raise_error(Net::SSH::ConnectionTimeout)
+    end
+
+    it 'should raise authentication errors'do
+      session = SSHake::Mock::Session.new(:connection_error => :authentication_failed)
+      expect { session.connect }.to raise_error(Net::SSH::AuthenticationFailed)
+    end
+
+    it 'should raise connection refused errors'do
+      session = SSHake::Mock::Session.new(:connection_error => :connection_refused)
+      expect { session.connect }.to raise_error(Errno::ECONNREFUSED)
+    end
+
+    it 'should raise host unreachable errors' do
+      session = SSHake::Mock::Session.new(:connection_error => :host_unreachable)
+      expect { session.connect }.to raise_error(Errno::EHOSTUNREACH)
+    end
+  end
+
   context "connected?" do
     it 'should be false initially' do
       expect(session.connected?).to be false
