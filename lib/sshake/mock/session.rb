@@ -18,6 +18,7 @@ module SSHake
         @store = {}
         @written_files = {}
         @connected = false
+        yield(self) if block_given?
       end
 
       def connect
