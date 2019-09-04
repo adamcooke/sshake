@@ -48,6 +48,8 @@ module SSHake
       end
 
       def execute(commands, options = nil, &block)
+        connect unless connected?
+
         environment = Environment.new(self)
 
         environment.options = create_options(options, block)
