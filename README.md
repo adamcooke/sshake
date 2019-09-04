@@ -86,3 +86,51 @@ To install SSHake, you just need to include it in your bundle.
 ```ruby
 gem 'sshake', '~> 1.0'
 ```
+
+## Testing
+
+SSHake include a mock session object which can be used when testing to provide standard responses for commands which you wish to run.
+
+```ruby
+# Create a new mock session object session
+session = SSHake::Mock::Session.new
+
+# Add a command which is now supported by the session. Any command
+# which is executed and doesn't match a command here will raise an
+# error. There is no need to start or end the regext with /A or /z
+# as these are implied.
+session.command_set.add /useradd (\w+)/ do |response, env|
+  if env.captures[0].length >= 10
+    response.stderr = "error: username is too long. Must be less than 10 characters."
+    response.exit_code = 1
+  elsif username == 'timeout'
+    response.timeout
+  else
+    response.stdout = "Hello #{env.captures[0]}!"
+  end
+end
+
+# You can then execute this in the same way as any command
+response = session.execute("useradd adam")
+response.stdout #=> "Hello adam!"
+
+# In addition to this, you can also share information between different
+# commands on the same session using the environment store hash.
+session.command_set.add /mkdir ([\w\/]+)/ do |response, env|
+  env.store[:made_directories] ||= []
+  env.store[:made_directories] << env.captures[0]
+end
+
+session.command_set.add /ls ([\w\/]+)/ do |response, env|
+  if env.store[:made_directories] && env.store[:made_directories].include(env.captures[0])
+    response.stdout = "file1.txt   file2.txt   file3.txt"
+  else
+    response.stderr = "No directory at #{env.captures[0]}"
+    response.exit_code = 2
+  end
+end
+
+session.execute("ls /etc/example").stderr #=> "No directory at /etc/example"
+session.execute("mkdir /etc/example")
+session.execute("ls /etc/example").stdout #=> "file1.txt [...]"
+```

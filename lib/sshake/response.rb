@@ -5,6 +5,7 @@ module SSHake
     def initialize
       @stdout = ''
       @stderr = ''
+      @exit_code = 0
     end
 
     attr_accessor :command
@@ -25,6 +26,10 @@ module SSHake
 
     def timeout?
       @exit_code == -255
+    end
+
+    def timeout!
+      @exit_code = -255
     end
   end
 end

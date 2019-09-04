@@ -4,26 +4,15 @@ require 'net/ssh'
 require 'net/sftp'
 require 'timeout'
 require 'sshake/error'
-require 'sshake/logger'
 require 'sshake/response'
-require 'sshake/execution_options'
+require 'sshake/base_session'
 
 module SSHake
-  class Session
+  class Session < BaseSession
     # The underlying net/ssh session
     #
     # @return [Net::SSH::Session]
     attr_reader :session
-
-    # A logger for this session
-    #
-    # @return [Logger, nil]
-    attr_accessor :logger
-
-    # Specify the default behaviour for raising erors
-    #
-    # @return [Boolean]
-    attr_accessor :raise_on_error
 
     # Create a new SSH session
     #
@@ -67,35 +56,24 @@ module SSHake
       @session = nil
     end
 
-    # Execute a command
-    #
     def execute(commands, options = nil, &block)
-      commands = [commands] unless commands.is_a?(Array)
-
       options = create_options(options, block)
-
-      # Map sudo onto command
-      if options.sudo_user
-        commands = add_sudo_to_commands_array(commands, options.sudo_user)
-      end
-
-      # Construct a full command string to execute
-      command = commands.join(' && ')
+      command_to_execute = prepare_commands(commands, options)
 
       # Log the command
-      log :info, "\e[44;37m=> #{command}\e[0m"
+      log :info, "\e[44;37m=> #{command_to_execute}\e[0m"
 
       # Execute the command
       response = Response.new
-      response.command = command
+      response.command = command_to_execute
       connect unless connected?
       begin
         channel = nil
         Timeout.timeout(options.timeout) do
           channel = @session.open_channel do |ch|
             response.start_time = Time.now
-            channel.exec(command) do |_, success|
-              raise "Command \"#{command}\" was unable to execute" unless success
+            channel.exec(command_to_execute) do |_, success|
+              raise "Command \"#{command_to_execute}\" was unable to execute" unless success
 
               ch.send_data(options.stdin) if options.stdin
               ch.eof!
@@ -129,16 +107,12 @@ module SSHake
         end
       rescue Timeout::Error => e
         kill!
-        response.exit_code = -255
+        response.timeout!
       ensure
         response.finish_time = Time.now
       end
 
-      if !response.success? && ((options.raise_on_error.nil? && @raise_on_error) || options.raise_on_error?)
-        raise ExecutionError, response
-      else
-        response
-      end
+      handle_response(response, options)
     end
 
     def write_data(path, data, options = nil, &block)
@@ -149,35 +123,5 @@ module SSHake
       response.success?
     end
 
-    private
-
-    def add_sudo_to_commands_array(commands, user)
-      commands.map do |command|
-        "sudo -u #{user} --stdin #{command}"
-      end
-    end
-
-    def create_options(hash, block)
-      if block && hash
-        raise Error, 'You cannot provide a block and options'
-      elsif block
-        ExecutionOptions.from_block(&block)
-      elsif hash.is_a?(Hash)
-        ExecutionOptions.from_hash(hash)
-      else
-        ExecutionOptions.new
-      end
-    end
-
-    def log(type, text, options = {})
-      logger = @logger || SSHake.logger
-      return unless logger
-
-      prefix = "\e[45;37m[#{@host}]\e[0m"
-      tabs = ' ' * (options[:tab] || 0)
-      text.split(/\n/).each do |line|
-        logger.send(type, prefix + tabs + line)
-      end
-    end
   end
 end
