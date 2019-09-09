@@ -3,6 +3,7 @@ require 'sshake/base_session'
 require 'sshake/mock/command_set'
 require 'sshake/mock/environment'
 require 'sshake/mock/unsupported_command_error'
+require 'sshake/mock/executed_command'
 
 module SSHake
   module Mock
@@ -11,10 +12,12 @@ module SSHake
       attr_reader :command_set
       attr_reader :store
       attr_reader :written_files
+      attr_reader :executed_commands
 
       def initialize(**options)
         @options = options
         @command_set = options[:command_set] || CommandSet.new
+        @executed_commands = []
         @store = {}
         @written_files = {}
         @connected = false
@@ -63,6 +66,7 @@ module SSHake
         end
 
         response = command.make_response(environment)
+        @executed_commands << ExecutedCommand.new(command, environment, response)
         handle_response(response, environment.options)
       end
 
@@ -70,6 +74,21 @@ module SSHake
         connect unless connected?
         @written_files[path] = data
         true
+      end
+
+      def find_executed_commands(matcher)
+        if matcher.is_a?(Regexp)
+          matcher = /\A#{matcher}\z/
+        else
+          matcher = /\A#{Regexp.escape(matcher.to_s)}\z/
+        end
+        @executed_commands.select do |command|
+          command.environment.command =~ matcher
+        end
+      end
+
+      def has_executed_command?(matcher)
+        find_executed_commands(matcher).size > 0
       end
 
     end

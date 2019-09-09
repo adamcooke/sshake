@@ -103,6 +103,41 @@ describe SSHake::Mock::Session do
       expect(session.execute('useradd adam').stdout).to eq 'Added successfully'
       expect(session.execute('userexists adam').stdout).to eq 'Exists'
     end
+
+    it 'should store executed commands in an array on the session' do
+      expect(session.executed_commands).to be_empty
+      added_command = session.command_set.add(/useradd (\w+)/) { |r, env| r.stdout = "added: #{env.captures[0]}" }
+      session.execute('useradd adam')
+      expect(session.executed_commands.first).to be_a SSHake::Mock::ExecutedCommand
+      expect(session.executed_commands.first.environment.command).to eq 'useradd adam'
+      expect(session.executed_commands.first.environment.captures).to eq ['adam']
+      expect(session.executed_commands.first.command).to eq added_command
+      expect(session.executed_commands.first.response.stdout).to eq 'added: adam'
+    end
+  end
+
+  context "#has_run_command?" do
+    it 'should return true if any executed command matches the given regexp' do
+      added_command = session.command_set.add(/useradd (\w+)/) { |r, env| r.stdout = "added: #{env.captures[0]}" }
+      session.execute('useradd adam')
+      expect(session.has_executed_command?('useradd adam')).to be true
+    end
+
+    it 'should return false if no execute commands match the given regexp' do
+      expect(session.has_executed_command?('useradd adam')).to be false
+    end
+  end
+
+  context 'find_executed_commands' do
+    it 'should return an array of all executed commands matching the regexp' do
+      added_command = session.command_set.add(/useradd (\w+)/) { |r, env| r.stdout = "added: #{env.captures[0]}" }
+      session.execute('useradd adam')
+      session.execute('useradd dave')
+      expect(session.find_executed_commands(/useradd adam/).size).to eq 1
+      expect(session.find_executed_commands(/useradd adam/).first).to be_a SSHake::Mock::ExecutedCommand
+      expect(session.find_executed_commands(/useradd .*/).size).to eq 2
+      expect(session.find_executed_commands(/useradd michael/).size).to eq 0
+    end
   end
 
   context "#write_data" do
