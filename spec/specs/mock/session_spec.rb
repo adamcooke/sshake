@@ -114,6 +114,25 @@ describe SSHake::Mock::Session do
       expect(session.executed_commands.first.command).to eq added_command
       expect(session.executed_commands.first.response.stdout).to eq 'added: adam'
     end
+
+    it 'should copy bytes streamed to the response' do
+      begin
+        file = File.open(__FILE__)
+
+        executed_command_block = false
+        added_command = session.command_set.add(/cat > \/test/) do |r, env|
+          r.stdout = "added: #{env.captures[0]}"
+          executed_command_block = true
+          expect(env.options.file_to_stream).to eq file
+       end
+
+        response = session.execute('cat > /test', :file_to_stream => file)
+        expect(response.bytes_streamed).to eq file.size
+        expect(executed_command_block).to be true
+      ensure
+        file.close
+      end
+    end
   end
 
   context "#has_run_command?" do

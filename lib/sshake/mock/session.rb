@@ -66,6 +66,11 @@ module SSHake
         end
 
         response = command.make_response(environment)
+
+        if environment.options.file_to_stream
+          response.bytes_streamed = environment.options.file_to_stream.size
+        end
+
         @executed_commands << ExecutedCommand.new(command, environment, response)
         handle_response(response, environment.options)
       end
