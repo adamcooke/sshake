@@ -109,7 +109,7 @@ module SSHake
 
               if options.file_to_stream
                 ch.on_process do |_, data|
-                  next if channel.eof?
+                  next if ch.eof?
                   if ch.output.length < 128 * 1024
                     if data = options.file_to_stream.read(1024 * 1024)
                       ch.send_data(data)
