@@ -41,6 +41,12 @@ module SSHake
     # @return [Proc]
     attr_accessor :stderr
 
+    # A file that you wish to stream to the remote channel
+    # with the current commend
+    #
+    # @return [File]
+    attr_accessor :file_to_stream
+
     # Should errors be raised
     #
     # @return [Boolean]
@@ -76,6 +82,7 @@ module SSHake
         options.stdin = hash[:stdin]
         options.stdout = hash[:stdout]
         options.stderr = hash[:stderr]
+        options.file_to_stream = hash[:file_to_stream]
         options
       end
 

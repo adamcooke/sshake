@@ -75,8 +75,13 @@ module SSHake
             channel.exec(command_to_execute) do |_, success|
               raise "Command \"#{command_to_execute}\" was unable to execute" unless success
 
-              ch.send_data(options.stdin) if options.stdin
-              ch.eof!
+              if options.stdin
+                ch.send_data(options.stdin)
+              end
+
+              if options.file_to_stream.nil?
+                ch.eof!
+              end
 
               ch.on_data do |_, data|
                 response.stdout += data
@@ -100,6 +105,20 @@ module SSHake
 
               ch.on_request('exit-signal') do |_, data|
                 response.exit_signal = data.read_long
+              end
+
+              if options.file_to_stream
+                ch.on_process do |_, data|
+                  next if channel.eof?
+                  if ch.output.length < 128 * 1024
+                    if data = options.file_to_stream.read(1024 * 1024)
+                      ch.send_data(data)
+                      response.bytes_streamed += data.bytesize
+                    else
+                      ch.eof!
+                    end
+                  end
+                end
               end
             end
           end

@@ -6,6 +6,7 @@ module SSHake
       @stdout = ''
       @stderr = ''
       @exit_code = 0
+      @bytes_streamed = 0
     end
 
     attr_accessor :command
@@ -15,6 +16,7 @@ module SSHake
     attr_accessor :exit_signal
     attr_accessor :start_time
     attr_accessor :finish_time
+    attr_accessor :bytes_streamed
 
     def success?
       @exit_code == 0

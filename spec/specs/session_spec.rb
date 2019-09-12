@@ -112,6 +112,13 @@ describe SSHake::Session do
         expect(result.success?).to be false
       end.to_not raise_error
     end
+
+    it 'should allow files to be streamed to the remote' do
+      session.execute('rm -rf /tmp/stream-test.txt')
+      result = session.execute('cat > /tmp/stream-test.txt', :file_to_stream => File.new(__FILE__))
+      expect(result.bytes_streamed).to eq File.size(__FILE__)
+      expect(session.execute('cat /tmp/stream-test.txt').stdout).to eq File.read(__FILE__)
+    end
   end
 
   context '#write_data' do

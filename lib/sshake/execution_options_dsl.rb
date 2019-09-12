@@ -34,5 +34,9 @@ module SSHake
     def stderr(&block)
       @options.stderr = block
     end
+
+    def file_to_stream(file)
+      @options.file_to_stream = file
+    end
   end
 end
