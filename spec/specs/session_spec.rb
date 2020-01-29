@@ -138,9 +138,9 @@ describe SSHake::Session do
       session.execute('whoami')
       string_io.rewind
       output = string_io.read
-      expect(output).to match /\[#{HOST}\].*=> whoami/
-      expect(output).to match /\[#{HOST}\].*#{USER}/
-      expect(output).to match /\[#{HOST}\].*=> Exit code: 0/
+      expect(output).to match /\[#{HOST}\] Executing: whoami/
+      expect(output).to match /\[#{HOST}\] #{USER}/
+      expect(output).to match /\[#{HOST}\] Exit code: 0/
     end
   end
 end

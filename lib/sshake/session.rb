@@ -57,81 +57,83 @@ module SSHake
     end
 
     def execute(commands, options = nil, &block)
-      options = create_options(options, block)
-      command_to_execute = prepare_commands(commands, options)
+      tagged do
+        options = create_options(options, block)
+        command_to_execute = prepare_commands(commands, options)
 
-      # Log the command
-      log :info, "\e[44;37m=> #{command_to_execute}\e[0m"
+        # Log the command
+        log :info, "Executing: #{command_to_execute}"
 
-      # Execute the command
-      response = Response.new
-      response.command = command_to_execute
-      connect unless connected?
-      begin
-        channel = nil
-        Timeout.timeout(options.timeout) do
-          channel = @session.open_channel do |ch|
-            response.start_time = Time.now
-            channel.exec(command_to_execute) do |_, success|
-              raise "Command \"#{command_to_execute}\" was unable to execute" unless success
+        # Execute the command
+        response = Response.new
+        response.command = command_to_execute
+        connect unless connected?
+        begin
+          channel = nil
+          Timeout.timeout(options.timeout) do
+            channel = @session.open_channel do |ch|
+              response.start_time = Time.now
+              channel.exec(command_to_execute) do |_, success|
+                raise "Command \"#{command_to_execute}\" was unable to execute" unless success
 
-              if options.stdin
-                ch.send_data(options.stdin)
-              end
-
-              if options.file_to_stream.nil?
-                ch.eof!
-              end
-
-              ch.on_data do |_, data|
-                response.stdout += data
-                options.stdout&.call(data)
-                log :debug, data.gsub(/[\r]/, ''), tab: 4
-              end
-
-              ch.on_extended_data do |_, _, data|
-                response.stderr += data.delete("\r")
-                options.stderr&.call(data)
-                log :warn, data, tab: 4
-                if data =~ /^\[sudo\] password for/
-                  ch.send_data "#{options.sudo_password}\n"
+                if options.stdin
+                  ch.send_data(options.stdin)
                 end
-              end
 
-              ch.on_request('exit-status') do |_, data|
-                response.exit_code = data.read_long&.to_i
-                log :info, "\e[43;37m=> Exit code: #{response.exit_code}\e[0m"
-              end
+                if options.file_to_stream.nil?
+                  ch.eof!
+                end
 
-              ch.on_request('exit-signal') do |_, data|
-                response.exit_signal = data.read_long
-              end
+                ch.on_data do |_, data|
+                  response.stdout += data
+                  options.stdout&.call(data)
+                  log :debug, data.gsub(/[\r]/, '')
+                end
 
-              if options.file_to_stream
-                ch.on_process do |_, data|
-                  next if ch.eof?
-                  if ch.output.length < 128 * 1024
-                    if data = options.file_to_stream.read(1024 * 1024)
-                      ch.send_data(data)
-                      response.bytes_streamed += data.bytesize
-                    else
-                      ch.eof!
+                ch.on_extended_data do |_, _, data|
+                  response.stderr += data.delete("\r")
+                  options.stderr&.call(data)
+                  log :debug, data
+                  if data =~ /^\[sudo\] password for/
+                    ch.send_data "#{options.sudo_password}\n"
+                  end
+                end
+
+                ch.on_request('exit-status') do |_, data|
+                  response.exit_code = data.read_long&.to_i
+                  log :debug, "Exit code: #{response.exit_code}"
+                end
+
+                ch.on_request('exit-signal') do |_, data|
+                  response.exit_signal = data.read_long
+                end
+
+                if options.file_to_stream
+                  ch.on_process do |_, data|
+                    next if ch.eof?
+                    if ch.output.length < 128 * 1024
+                      if data = options.file_to_stream.read(1024 * 1024)
+                        ch.send_data(data)
+                        response.bytes_streamed += data.bytesize
+                      else
+                        ch.eof!
+                      end
                     end
                   end
                 end
               end
             end
+            channel.wait
           end
-          channel.wait
+        rescue Timeout::Error => e
+          kill!
+          response.timeout!
+        ensure
+          response.finish_time = Time.now
         end
-      rescue Timeout::Error => e
-        kill!
-        response.timeout!
-      ensure
-        response.finish_time = Time.now
-      end
 
-      handle_response(response, options)
+        handle_response(response, options)
+      end
     end
 
     def write_data(path, data, options = nil, &block)

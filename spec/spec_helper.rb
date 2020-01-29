@@ -1,14 +1,9 @@
 $LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
 
-HOST = ENV['TEST_HOST']
-USER = ENV['TEST_USER'] || ENV['USER']
-
-if HOST.nil? || USER.nil?
-  warn 'TEST_HOST and TEST_USER must be provided.'
-  exit 1
-end
-
 TEST_ROOT = File.expand_path(__dir__)
+
+HOST = ENV['HOST']
+USER = ENV['USER']
 
 RSpec.configure do |config|
   config.color = true

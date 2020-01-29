@@ -1,3 +1,4 @@
+require 'securerandom'
 require 'sshake/logger'
 require 'sshake/execution_options'
 
@@ -73,11 +74,22 @@ module SSHake
       logger = @logger || SSHake.logger
       return unless logger
 
-      prefix = "\e[45;37m[#{@host}]\e[0m"
-      tabs = ' ' * (options[:tab] || 0)
-      text.split(/\n/).each do |line|
-        logger.send(type, prefix + tabs + line)
+      prefix = "[#{@host}]"
+
+      if log_id = Thread.current[:log_id]
+        prefix = "[#{log_id}] #{prefix} "
       end
+
+      text.split(/\n/).each do |line|
+        logger.send(type, prefix + line)
+      end
+    end
+
+    def tagged
+      Thread.current[:log_id] = SecureRandom.hex(4)
+      yield
+    ensure
+      Thread.current[:log_id] = nil
     end
 
     def prepare_commands(commands, execution_options, **options)
