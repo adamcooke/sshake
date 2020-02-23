@@ -44,6 +44,8 @@ module SSHake
     #
     # @return [void]
     def disconnect
+      return false if @session.nil?
+
       begin
         log :debug, 'Closing connectiong'
         @session.close
