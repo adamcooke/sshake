@@ -9,10 +9,19 @@ module SSHake
     # @return [Logger, nil]
     attr_accessor :logger
 
+    # An ID for this session
+    #
+    # @return [String]
+    attr_reader :id
+
     # Specify the default behaviour for raising erors
     #
     # @return [Boolean]
     attr_accessor :raise_on_error
+
+    def initialize(*args)
+      @id = SecureRandom.hex(4)
+    end
 
     # Connect to the SSH server
     #
@@ -74,22 +83,11 @@ module SSHake
       logger = @logger || SSHake.logger
       return unless logger
 
-      prefix = "[#{@host}]"
-
-      if log_id = Thread.current[:log_id]
-        prefix = "[#{log_id}] #{prefix} "
-      end
+      prefix = "[#{@id}] [#{@host}] "
 
       text.split(/\n/).each do |line|
         logger.send(type, prefix + line)
       end
-    end
-
-    def tagged
-      Thread.current[:log_id] = SecureRandom.hex(4)
-      yield
-    ensure
-      Thread.current[:log_id] = nil
     end
 
     def prepare_commands(commands, execution_options, **options)
