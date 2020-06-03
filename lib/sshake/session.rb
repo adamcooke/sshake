@@ -151,7 +151,12 @@ module SSHake
     def write_data(path, data, options = nil, &block)
       connect unless connected?
       tmp_path = "/tmp/sshake-tmp-file-#{SecureRandom.hex(32)}"
-      @session.sftp.file.open(tmp_path, 'w') { |f| f.write(data) }
+      @session.sftp.file.open(tmp_path, 'w') do |f|
+        d = data.dup.force_encoding('BINARY')
+        until d.empty?
+          f.write(d.slice!(0, 1024))
+        end
+      end
       response = execute("mv #{tmp_path} #{path}", options, &block)
       response.success?
     end
