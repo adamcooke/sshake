@@ -80,7 +80,11 @@ describe SSHake::Session do
     it 'should raise an error if that is what is required' do
       expect do
         session.execute('exit 1', raise_on_error: true)
-      end.to raise_error(SSHake::ExecutionError)
+      end.to raise_error(SSHake::ExecutionError) do |e|
+        expect(e.message).to include "(exit code: 1)"
+        expect(e.message).to include "exit 1"
+        expect(e.message).to include "(stderr: )"
+      end
     end
 
     it 'should raise an error if the session is set to raise errors' do

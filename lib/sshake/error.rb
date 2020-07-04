@@ -11,8 +11,12 @@ module SSHake
 
     attr_reader :response
 
+    def to_s
+      message
+    end
+
     def message
-      "Failed to execute command: #{@response.command} (exit code: #{@response.exit_code})"
+      "Failed to execute command: #{@response.command} (stderr: #{@response.stderr}) (exit code: #{@response.exit_code})"
     end
   end
 end
