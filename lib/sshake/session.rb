@@ -150,7 +150,7 @@ module SSHake
 
     def write_data(path, data, options = {}, &block)
       connect unless connected?
-      proc = proc { |opts| opts.stdin = data.force_encoding('BINARY') }
+      proc = proc { |opts| opts.stdin = data.dup.force_encoding('BINARY') }
       response = execute("dd of=#{path} bs=1M status=none", options.merge(after: proc), &block)
       response.success?
     end
