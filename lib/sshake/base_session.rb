@@ -68,15 +68,21 @@ module SSHake
     end
 
     def create_options(hash, block)
-      if block && hash
+      after = hash.delete(:after) if hash
+
+      if block && hash && hash.present?
         raise Error, 'You cannot provide a block and options'
       elsif block
-        ExecutionOptions.from_block(&block)
+        opts = ExecutionOptions.from_block(&block)
       elsif hash.is_a?(Hash)
-        ExecutionOptions.from_hash(hash)
+        opts = ExecutionOptions.from_hash(hash)
       else
-        ExecutionOptions.new
+        opts = ExecutionOptions.new
       end
+
+      after.call(opts) if after
+
+      opts
     end
 
     def log(type, text, options = {})

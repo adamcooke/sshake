@@ -148,16 +148,10 @@ module SSHake
       handle_response(response, options)
     end
 
-    def write_data(path, data, options = nil, &block)
+    def write_data(path, data, options = {}, &block)
       connect unless connected?
-      tmp_path = "/tmp/sshake-tmp-file-#{SecureRandom.hex(32)}"
-      @session.sftp.file.open(tmp_path, 'w') do |f|
-        d = data.dup.force_encoding('BINARY')
-        until d.empty?
-          f.write(d.slice!(0, 1024))
-        end
-      end
-      response = execute("mv #{tmp_path} #{path}", options, &block)
+      proc = proc { |opts| opts.stdin = data.dup.force_encoding('BINARY') }
+      response = execute("dd of=#{path} bs=1M status=none", options.merge(after: proc), &block)
       response.success?
     end
 
