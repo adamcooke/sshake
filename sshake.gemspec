@@ -13,6 +13,8 @@ Gem::Specification.new do |s|
   s.authors       = ['Adam Cooke']
   s.email         = ['me@adamcooke.io']
   s.licenses      = ['MIT']
+  s.required_ruby_version = '>= 2.6'
+
   s.add_dependency 'net-sftp', '>= 2'
   s.add_dependency 'net-ssh', '>= 2'
 end

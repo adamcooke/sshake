@@ -1,7 +1,10 @@
+# frozen_string_literal: true
+
 require 'sshake/execution_options_dsl'
 
 module SSHake
   class ExecutionOptions
+
     # The timeout
     #
     # @return [Integer]
@@ -44,7 +47,7 @@ module SSHake
     # A file that you wish to stream to the remote channel
     # with the current commend
     #
-    # @return [File]
+    # @return [File]
     attr_accessor :file_to_stream
 
     # Should errors be raised
@@ -55,6 +58,7 @@ module SSHake
     end
 
     class << self
+
       # Return the default timeout
       #
       # @return [Integer]
@@ -70,15 +74,18 @@ module SSHake
       def from_hash(hash)
         options = new
         options.timeout = hash[:timeout]
-        if hash[:sudo].is_a?(String)
+        case hash[:sudo]
+        when String
           options.sudo_user = hash[:sudo]
-        elsif hash[:sudo].is_a?(Hash)
+        when Hash
           options.sudo_user = hash[:sudo][:user]
           options.sudo_password = hash[:sudo][:password]
-        elsif hash[:sudo] == true
+        when true
           options.sudo_user = 'root'
         end
+        # rubocop:disable Style/DoubleNegation
         options.raise_on_error = !!hash[:raise_on_error]
+        # rubocop:enable Style/DoubleNegation
         options.stdin = hash[:stdin]
         options.stdout = hash[:stdout]
         options.stderr = hash[:stderr]
@@ -95,6 +102,8 @@ module SSHake
         yield dsl
         options
       end
+
     end
+
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'sshake/response'
 
 module SSHake
@@ -24,9 +26,7 @@ module SSHake
       def make_response(environment)
         response = SSHake::Response.new
         response.start_time = Time.now
-        if @block
-          @block.call(response, environment)
-        end
+        @block&.call(response, environment)
         response.finish_time = Time.now
         response
       end

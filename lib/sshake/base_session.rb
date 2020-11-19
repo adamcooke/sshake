@@ -1,9 +1,12 @@
+# frozen_string_literal: true
+
 require 'securerandom'
 require 'sshake/logger'
 require 'sshake/execution_options'
 
 module SSHake
   class BaseSession
+
     # A logger for this session
     #
     # @return [Logger, nil]
@@ -19,7 +22,7 @@ module SSHake
     # @return [Boolean]
     attr_accessor :raise_on_error
 
-    def initialize(*args)
+    def initialize(*_args)
       @id = SecureRandom.hex(4)
     end
 
@@ -27,36 +30,36 @@ module SSHake
     #
     # @return [void]
     def connect
-      raise "Override #connect in sub-sessions"
+      raise 'Override #connect in sub-sessions'
     end
 
     # Is there an established SSH connection
     #
     # @return [Boolean]
     def connected?
-      raise "Override #connected? in sub-sessions"
+      raise 'Override #connected? in sub-sessions'
     end
 
     # Disconnect the underlying SSH connection
     #
     # @return [void]
     def disconnect
-      raise "Override #disconnect in sub-sessions"
+      raise 'Override #disconnect in sub-sessions'
     end
 
     # Kill the underlying connection
     def kill!
-      raise "Override #kill! in sub-sessions"
+      raise 'Override #kill! in sub-sessions'
     end
 
     # Execute a command
     #
-    def execute(commands, options = nil, &block)
-      raise "Override #execute in sub-sessions"
+    def execute(_commands, _options = nil)
+      raise 'Override #execute in sub-sessions'
     end
 
-    def write_data(path, data, options = nil, &block)
-      raise "Override #write_data in sub-sessions"
+    def write_data(_path, _data, _options = nil)
+      raise 'Override #write_data in sub-sessions'
     end
 
     private
@@ -70,7 +73,9 @@ module SSHake
     def create_options(hash, block)
       if block && hash
         raise Error, 'You cannot provide a block and options'
-      elsif block
+      end
+
+      if block
         ExecutionOptions.from_block(&block)
       elsif hash.is_a?(Hash)
         ExecutionOptions.from_hash(hash)
@@ -79,7 +84,7 @@ module SSHake
       end
     end
 
-    def log(type, text, options = {})
+    def log(type, text, _options = {})
       logger = @logger || SSHake.logger
       return unless logger
 
@@ -105,9 +110,9 @@ module SSHake
     def handle_response(response, options)
       if !response.success? && ((options.raise_on_error.nil? && @raise_on_error) || options.raise_on_error?)
         raise ExecutionError, response
-      else
-        response
       end
+
+      response
     end
 
   end

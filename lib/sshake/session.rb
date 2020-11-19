@@ -9,6 +9,7 @@ require 'sshake/base_session'
 
 module SSHake
   class Session < BaseSession
+
     # The underlying net/ssh session
     #
     # @return [Net::SSH::Session]
@@ -60,9 +61,9 @@ module SSHake
 
     # Kill the underlying connection
     def kill!
-      log :debug, "Attempting kill/shutdown of session"
+      log :debug, 'Attempting kill/shutdown of session'
       @session.shutdown!
-      log :debug, "Session shutdown success"
+      log :debug, 'Session shutdown success'
       @session = nil
     end
 
@@ -87,18 +88,14 @@ module SSHake
             channel.exec(command_to_execute) do |_, success|
               raise "Command \"#{command_to_execute}\" was unable to execute" unless success
 
-              if options.stdin
-                ch.send_data(options.stdin)
-              end
+              ch.send_data(options.stdin) if options.stdin
 
-              if options.file_to_stream.nil?
-                ch.eof!
-              end
+              ch.eof! if options.file_to_stream.nil?
 
               ch.on_data do |_, data|
                 response.stdout += data
                 options.stdout&.call(data)
-                log :debug, data.gsub(/[\r]/, '')
+                log :debug, data.gsub(/\r/, '')
               end
 
               ch.on_extended_data do |_, _, data|
@@ -123,6 +120,7 @@ module SSHake
               if options.file_to_stream
                 ch.on_process do |_, data|
                   next if ch.eof?
+
                   if ch.output.length < 128 * 1024
                     if data = options.file_to_stream.read(1024 * 1024)
                       ch.send_data(data)
@@ -137,8 +135,8 @@ module SSHake
           end
           channel.wait
         end
-      rescue Timeout::Error => e
-        log :debug, "Got timeout error while executing command"
+      rescue Timeout::Error
+        log :debug, 'Got timeout error while executing command'
         kill!
         response.timeout!
       ensure
@@ -153,9 +151,7 @@ module SSHake
       tmp_path = "/tmp/sshake-tmp-file-#{SecureRandom.hex(32)}"
       @session.sftp.file.open(tmp_path, 'w') do |f|
         d = data.dup.force_encoding('BINARY')
-        until d.empty?
-          f.write(d.slice!(0, 1024))
-        end
+        f.write(d.slice!(0, 1024)) until d.empty?
       end
       response = execute("mv #{tmp_path} #{path}", options, &block)
       response.success?

@@ -1,10 +1,10 @@
+# frozen_string_literal: true
+
 module SSHake
   module Mock
     class ExecutedCommand
 
-      attr_reader :command
-      attr_reader :environment
-      attr_reader :response
+      attr_reader :command, :environment, :response
 
       def initialize(command, environment, response)
         @command = command

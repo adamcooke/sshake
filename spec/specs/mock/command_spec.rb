@@ -4,20 +4,20 @@ require 'spec_helper'
 require 'sshake/mock/command'
 
 describe SSHake::Mock::Command do
-  context "#match" do
-    it "should be able to match strings" do
+  context '#match' do
+    it 'should be able to match strings' do
       command = SSHake::Mock::Command.new('whoami')
       expect(command.match('whoami')).to be_a Array
       expect(command.match('other')).to be_nil
     end
 
-    it "should be able to match regular expressions" do
+    it 'should be able to match regular expressions' do
       command = SSHake::Mock::Command.new(/whoami/)
       expect(command.match('whoami')).to be_a Array
       expect(command.match('other')).to be_nil
     end
 
-    it "should be able to match regular expressions with capture groups" do
+    it 'should be able to match regular expressions with capture groups' do
       command = SSHake::Mock::Command.new(/useradd (\w+) -g (\w+)/)
       match = command.match('useradd adam -g users')
       expect(match[0]).to eq 'adam'
@@ -41,5 +41,4 @@ describe SSHake::Mock::Command do
       expect(response.stderr).to eq 'hello adam'
     end
   end
-
 end

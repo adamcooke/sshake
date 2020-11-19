@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SSHake
   module Mock
     class Environment
@@ -7,9 +9,7 @@ module SSHake
         @captures = []
       end
 
-      attr_accessor :command
-      attr_accessor :options
-      attr_accessor :captures
+      attr_accessor :command, :options, :captures
 
       def store
         @session ? @session.store : nil

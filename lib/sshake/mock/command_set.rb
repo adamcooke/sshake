@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'sshake/mock/command'
 
 module SSHake

@@ -2,6 +2,7 @@
 
 module SSHake
   class ExecutionOptionsDSL
+
     def initialize(options)
       @options = options
     end
@@ -15,9 +16,11 @@ module SSHake
       @options.sudo_password = options[:password]
     end
 
+    # rubocop:disable Style/OptionalBooleanParameter
     def raise_on_error(bool = true)
       @options.raise_on_error = bool
     end
+    # rubocop:enable Style/OptionalBooleanParameter
 
     def dont_raise_on_error
       @options.raise_on_error = false
@@ -38,5 +41,6 @@ module SSHake
     def file_to_stream(file)
       @options.file_to_stream = file
     end
+
   end
 end

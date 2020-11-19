@@ -2,6 +2,7 @@
 
 module SSHake
   class Response
+
     def initialize
       @stdout = ''
       @stderr = ''
@@ -9,17 +10,10 @@ module SSHake
       @bytes_streamed = 0
     end
 
-    attr_accessor :command
-    attr_accessor :stdout
-    attr_accessor :stderr
-    attr_accessor :exit_code
-    attr_accessor :exit_signal
-    attr_accessor :start_time
-    attr_accessor :finish_time
-    attr_accessor :bytes_streamed
+    attr_accessor :command, :stdout, :stderr, :exit_code, :exit_signal, :start_time, :finish_time, :bytes_streamed
 
     def success?
-      @exit_code == 0
+      @exit_code.zero?
     end
 
     def time
@@ -33,5 +27,6 @@ module SSHake
     def timeout!
       @exit_code = -255
     end
+
   end
 end

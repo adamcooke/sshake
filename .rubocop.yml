@@ -1,3 +1,10 @@
-AllCops:
-  AutoCorrect: false
-  TargetRubyVersion: 2.3
+inherit_from:
+  - .rubocop_todo.yml
+  - https://dev.k.io/rubocop/rubocop.yml
+
+Lint/MissingSuper:
+  Enabled: false
+
+# Just disabled for now...
+Metrics/MethodLength:
+  Enabled: false

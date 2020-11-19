@@ -4,14 +4,14 @@ require 'spec_helper'
 require 'sshake/mock/command_set'
 
 describe SSHake::Mock::CommandSet do
-  subject(:command_set) { SSHake::Mock::CommandSet.new}
+  subject(:command_set) { SSHake::Mock::CommandSet.new }
 
-  it "should be able to add commands and return them" do
-    command = command_set.add(/whoami/) { }
+  it 'should be able to add commands and return them' do
+    command = command_set.add(/whoami/) { true }
     expect(command).to be_a SSHake::Mock::Command
   end
 
-  context "match" do
+  context 'match' do
     it 'should return nil if no commands match the given command' do
       expect(command_set.match('ps')).to be nil
     end

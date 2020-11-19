@@ -57,7 +57,7 @@ describe SSHake::Session do
       response = session.execute('sleep 7', timeout: 2)
       expect(response.time).to be < 3
       expect(response.timeout?).to be true
-      expect(response.exit_code).to eq -255
+      expect(response.exit_code).to eq(-255)
     end
 
     it 'should not hang closing connections when timed out' do
@@ -67,7 +67,7 @@ describe SSHake::Session do
       total_time = (Time.now - start_time).to_i
       expect(total_time).to be < 3
       expect(response.timeout?).to be true
-      expect(response.exit_code).to eq -255
+      expect(response.exit_code).to eq(-255)
     end
 
     it 'should automatically establish a new connection after being killed' do
@@ -81,9 +81,9 @@ describe SSHake::Session do
       expect do
         session.execute('exit 1', raise_on_error: true)
       end.to raise_error(SSHake::ExecutionError) do |e|
-        expect(e.message).to include "(exit code: 1)"
-        expect(e.message).to include "exit 1"
-        expect(e.message).to include "(stderr: )"
+        expect(e.message).to include '(exit code: 1)'
+        expect(e.message).to include 'exit 1'
+        expect(e.message).to include '(stderr: )'
       end
     end
 
@@ -119,7 +119,7 @@ describe SSHake::Session do
 
     it 'should allow files to be streamed to the remote' do
       session.execute('rm -rf /tmp/stream-test.txt')
-      result = session.execute('cat > /tmp/stream-test.txt', :file_to_stream => File.new(__FILE__))
+      result = session.execute('cat > /tmp/stream-test.txt', file_to_stream: File.new(__FILE__))
       expect(result.bytes_streamed).to eq File.size(__FILE__)
       expect(session.execute('cat /tmp/stream-test.txt').stdout).to eq File.read(__FILE__)
     end
@@ -142,9 +142,9 @@ describe SSHake::Session do
       session.execute('whoami')
       string_io.rewind
       output = string_io.read
-      expect(output).to match /\[#{session.id}\] \[#{HOST}\] Executing: whoami/
-      expect(output).to match /\[#{session.id}\] \[#{HOST}\] #{USER}/
-      expect(output).to match /\[#{session.id}\] \[#{HOST}\] Exit code: 0/
+      expect(output).to(match(/\[#{session.id}\] \[#{HOST}\] Executing: whoami/))
+      expect(output).to(match(/\[#{session.id}\] \[#{HOST}\] #{USER}/))
+      expect(output).to(match(/\[#{session.id}\] \[#{HOST}\] Exit code: 0/))
     end
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'net/ssh/errors'
 require 'sshake/base_session'
 require 'sshake/mock/command_set'
@@ -9,10 +11,7 @@ module SSHake
   module Mock
     class Session < BaseSession
 
-      attr_reader :command_set
-      attr_reader :store
-      attr_reader :written_files
-      attr_reader :executed_commands
+      attr_reader :command_set, :store, :written_files, :executed_commands
 
       def initialize(**options)
         @options = options
@@ -57,25 +56,21 @@ module SSHake
         environment = Environment.new(self)
 
         environment.options = create_options(options, block)
-        environment.command = prepare_commands(commands, environment.options, :add_sudo => false)
+        environment.command = prepare_commands(commands, environment.options, add_sudo: false)
 
         command, environment.captures = @command_set.match(environment.command)
 
-        if command.nil?
-          raise UnsupportedCommandError.new(environment.command)
-        end
+        raise UnsupportedCommandError, environment.command if command.nil?
 
         response = command.make_response(environment)
 
-        if environment.options.file_to_stream
-          response.bytes_streamed = environment.options.file_to_stream.size
-        end
+        response.bytes_streamed = environment.options.file_to_stream.size if environment.options.file_to_stream
 
         @executed_commands << ExecutedCommand.new(command, environment, response)
         handle_response(response, environment.options)
       end
 
-      def write_data(path, data, options = nil, &block)
+      def write_data(path, data, _options = nil)
         connect unless connected?
         @written_files[path] = data
         true
@@ -92,9 +87,11 @@ module SSHake
         end
       end
 
+      # rubocop:disable Naming/PredicateName
       def has_executed_command?(matcher)
-        find_executed_commands(matcher).size > 0
+        find_executed_commands(matcher).size.positive?
       end
+      # rubocop:enable Naming/PredicateName
 
     end
   end
