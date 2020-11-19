@@ -19,26 +19,25 @@ jobs:
       - name: Run linter
         run: bundle exec rubocop
 
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        ruby_version:
-          - 2.5
-          - 2.6
-          - 2.7
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: ${{ matrix.ruby_version }}
+  # test:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       ruby_version:
+  #         - 2.6
+  #         - 2.7
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: ruby/setup-ruby@v1
+  #       with:
+  #         ruby-version: ${{ matrix.ruby_version }}
 
-      - name: Configure Bundler
-        run: bundle config set rubygems.pkg.github.com "${{ secrets.KRYSTAL_GITHUB_PACKAGE_READ_KEY }}"
+  #     - name: Configure Bundler
+  #       run: bundle config set rubygems.pkg.github.com "${{ secrets.KRYSTAL_GITHUB_PACKAGE_READ_KEY }}"
 
-      - name: Install dependencies
-        run: bundle install
+  #     - name: Install dependencies
+  #       run: bundle install
 
-      - name: Run tests
-        run: bundle exec rspec
+  #     - name: Run tests
+  #       run: bundle exec rspec
