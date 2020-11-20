@@ -15,13 +15,38 @@ module SSHake
     # @return [Net::SSH::Session]
     attr_reader :session
 
+    # Return the host to connect to
+    #
+    # @return [String]
+    attr_reader :host
+
     # Create a new SSH session
     #
     # @return [Sshake::Session]
-    def initialize(host, *args)
+    def initialize(host, username_or_options = {}, options_with_username = {})
       super
       @host = host
-      @session_options = args
+      if username_or_options.is_a?(String)
+        @user = username_or_options
+        @session_options = options_with_username
+      else
+        @user = username_or_options.delete(:user)
+        @session_options = username_or_options
+      end
+    end
+
+    # Return the username for the connection
+    #
+    # @return [String]
+    def user
+      @user || ENV['USER']
+    end
+
+    # Return the port that will be connected to
+    #
+    # @return [Integer]
+    def port
+      @session_options[:port] || 22
     end
 
     # Connect to the SSH server
@@ -30,7 +55,7 @@ module SSHake
     def connect
       log :debug, "Creating connection to #{@host}"
       log :debug, "Session options: #{@session_options.inspect}"
-      @session = Net::SSH.start(@host, *@session_options)
+      @session = Net::SSH.start(@host, user, @session_options)
       true
     end
 
@@ -155,6 +180,20 @@ module SSHake
       end
       response = execute("mv #{tmp_path} #{path}", options, &block)
       response.success?
+    end
+
+    class << self
+
+      def create(*args)
+        session = new(*args)
+
+        if recorder = Thread.current[:sshake_recorder]
+          return RecordedSession.new(recorder, session)
+        end
+
+        session
+      end
+
     end
 
   end

@@ -7,7 +7,7 @@ Sshake is a library to help run commands on SSH servers. It's a wrapper around t
 ```ruby
 # Create a new session by providing the connection options.
 # The same options as supported by net/ssh.
-session = Sshake::Session.new("myserver.domain.com")
+session = Sshake::Session.create("myserver.domain.com")
 
 # Execute a command
 result = session.execute('whoami') do |r|
@@ -88,6 +88,55 @@ gem 'sshake', '~> 1.0'
 ```
 
 ## Testing
+
+### Recording Sessions
+
+SSHake includes support for recording SSH sessions and allowing them to be replayed in subsequent runs. This is very useful when running integration tests and you don't want to always talk to a live backend. The following example describes how to use this feature:
+
+```ruby
+# Start by requiring the recording framework
+require 'sshake/recording'
+
+# Set the path that you wish to save your recordings. This directory
+# will be created if it doesn't exist.
+SSHake::Recorder.save_root = '{root}/spec/recordings'
+
+# You need to put all the work you wish to cache in a block. All sessions
+# created through SSHake while within this block will be recorded or replayed
+# as appropriate.
+SSHake.record "name_of_set" do
+
+  # Create a session as normal (note use of create rather than new)
+  session = SSHake::Session.create('server.example.com', 'dave', port: 2345)
+
+  # When you run commands on this session, if it has not been run before,
+  # the connection to the backend host will happen as normal. The response from
+  # that call will then be saved and any future command with the same command,
+  # command options & connection details (host, user & port only) will be returned
+  # from the cache.
+  response = session.execute('whoami')
+
+  # You can check to see whether a response has come from the cache or not
+  response.cached? # => false
+
+  # A subsequent run in the same block will also return from the cache.
+  response = session.execute('whoami')
+  response.cached? # => true
+end
+```
+
+A few notes about this:
+
+- YAML files containing the cached data will be saved to disk after each command is
+  recorded. If you wish to clear the cache, just delete the appropriate file. Files
+  are named based on the name of the block.
+
+- You cannot nest `SSHake.record` blocks.
+
+- If you don't specify a `save_root`, the caching will only last for the duration of
+  the `record` block.
+
+### Mocking
 
 SSHake include a mock session object which can be used when testing to provide standard responses for commands which you wish to run.
 
