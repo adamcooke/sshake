@@ -23,13 +23,33 @@ describe SSHake::Recorder do
       response.finish_time = Time.new(2020, 3, 1, 23)
 
       recorder.record('whoami', response)
-      expect(recorder.cache['whoami']).to eq [{ connection: {}, options: { timeout: 60 }, response: { stdout: "root\n", stderr: '', exit_code: 0, start_time: 1_583_100_000, finish_time: 1_583_103_600 } }]
+      expect(recorder.cache['whoami']).to eq [
+        connection: {},
+        options: { timeout: 60 },
+        response: {
+          stdout: "root\n",
+          stderr: '',
+          exit_code: 0,
+          start_time: 1_583_100_000,
+          finish_time: 1_583_103_600
+        }
+      ]
     end
   end
 
   context '#play' do
     it 'returns the correct command when no options provided' do
-      recorder.cache['whoami'] = [{ connection: {}, options: { timeout: 60 }, response: { exit_code: 0, finish_time: 1_583_103_600, start_time: 1_583_100_000, stderr: '', stdout: "someuser\n" } }]
+      recorder.cache['whoami'] = [{
+        connection: {},
+        options: { timeout: 60 },
+        response: {
+          exit_code: 0,
+          finish_time: 1_583_103_600,
+          start_time: 1_583_100_000,
+          stderr: '',
+          stdout: "someuser\n"
+        }
+      }]
 
       response = recorder.play('whoami')
       expect(response).to be_a SSHake::Response
@@ -42,7 +62,13 @@ describe SSHake::Recorder do
       recorder.cache['whoami'] = [
         {
           options: { timeout: 60, sudo_user: 'root' },
-          response: { exit_code: 0, finish_time: 1_583_103_600, start_time: 1_583_100_000, stderr: '', stdout: "root\n" },
+          response: {
+            exit_code: 0,
+            finish_time: 1_583_103_600,
+            start_time: 1_583_100_000,
+            stderr: '',
+            stdout: "root\n"
+          },
           connection: {}
         }
       ]
@@ -58,7 +84,13 @@ describe SSHake::Recorder do
       recorder.cache['whoami'] = [
         {
           options: { timeout: 60 },
-          response: { exit_code: 0, finish_time: 1_583_103_600, start_time: 1_583_100_000, stderr: '', stdout: "root\n" },
+          response: {
+            exit_code: 0,
+            finish_time: 1_583_103_600,
+            start_time: 1_583_100_000,
+            stderr: '',
+            stdout: "root\n"
+          },
           connection: { hostname: 'host1', user: 'root', port: 22 }
         }
       ]
@@ -73,7 +105,16 @@ describe SSHake::Recorder do
     end
 
     it 'returns nil when the options dont match' do
-      recorder.cache['whoami'] = [{ options: { timeout: 60 }, response: { exit_code: 0, finish_time: 1_583_103_600, start_time: 1_583_100_000, stderr: '', stdout: "someuser\n" } }]
+      recorder.cache['whoami'] = [{
+        options: { timeout: 60 },
+        response: {
+          exit_code: 0,
+          finish_time: 1_583_103_600,
+          start_time: 1_583_100_000,
+          stderr: '',
+          stdout: "someuser\n"
+        }
+      }]
 
       expect(recorder.play('whoami', options: SSHake::ExecutionOptions.from_hash(sudo: true))).to be nil
     end
@@ -82,7 +123,13 @@ describe SSHake::Recorder do
       recorder.cache['whoami'] = [
         {
           options: { timeout: 60 },
-          response: { exit_code: 0, finish_time: 1_583_103_600, start_time: 1_583_100_000, stderr: '', stdout: "root\n" },
+          response: {
+            exit_code: 0,
+            finish_time: 1_583_103_600,
+            start_time: 1_583_100_000,
+            stderr: '',
+            stdout: "root\n"
+          },
           connection: { hostname: 'host1', user: 'root', port: 22 }
         }
       ]
@@ -93,14 +140,16 @@ describe SSHake::Recorder do
   end
 
   context 'with a save_root set' do
-    subject(:temp_root) { "/tmp/sshake-recorder-tmp-root-#{Time.now.to_i}-#{Process.pid}"}
+    subject(:temp_root) { "/tmp/sshake-recorder-tmp-root-#{Time.now.to_i}-#{Process.pid}" }
     before { allow(SSHake::Recorder).to receive(:save_root).and_return(temp_root) }
     after { FileUtils.rm_rf(temp_root) }
 
     context '#load' do
       it 'loads from the file' do
         FileUtils.mkdir_p(temp_root)
+        # rubocop:disable Layout/LineLength
         File.write(File.join(temp_root, 'example.yml'), "---\necho Hello again!:\n- :connection:\n    :host: \n    :user: adam\n    :port: 22\n  :options:\n    :timeout: 60\n  :response:\n    :stdout: 'Hello again!\n\n'\n    :stderr: ''\n    :exit_code: 0\n    :start_time: 1605865330\n    :finish_time: 1605865330\n")
+        # rubocop:enable Layout/LineLength
         recorder.load
         expect(recorder.cache['echo Hello again!'][0]).to be_a Hash
       end

@@ -14,7 +14,7 @@ describe SSHake do
 
     it 'raises an error if another recorder is set up' do
       expect do
-        SSHake.record('example') { SSHake.record('example2') {} }
+        SSHake.record('example') { SSHake.record('example2') { true } }
       end.to raise_error SSHake::NestedRecordingsUnsupportedError
     end
   end
