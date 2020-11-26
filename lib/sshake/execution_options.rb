@@ -78,7 +78,7 @@ module SSHake
         when String
           options.sudo_user = hash[:sudo]
         when Hash
-          options.sudo_user = hash[:sudo][:user]
+          options.sudo_user = hash[:sudo][:user] || 'root'
           options.sudo_password = hash[:sudo][:password]
         when true
           options.sudo_user = 'root'

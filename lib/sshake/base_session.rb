@@ -64,9 +64,13 @@ module SSHake
 
     private
 
-    def add_sudo_to_commands_array(commands, user)
+    def add_sudo_to_commands_array(commands, user, password = nil)
+      sudo_prefix = "sudo -u #{user}"
+      unless password.nil?
+        sudo_prefix += " --stdin -p '[sshake-sudo-password]: ' "
+      end
       commands.map do |command|
-        "sudo -u #{user} --stdin #{command}"
+        "#{sudo_prefix} #{command}"
       end
     end
 
@@ -100,7 +104,7 @@ module SSHake
 
       # Map sudo onto command
       if execution_options.sudo_user && options[:add_sudo] != false
-        commands = add_sudo_to_commands_array(commands, execution_options.sudo_user)
+        commands = add_sudo_to_commands_array(commands, execution_options.sudo_user, execution_options.sudo_password)
       end
 
       # Construct a full command string to execute

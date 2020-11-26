@@ -115,7 +115,10 @@ module SSHake
 
               ch.send_data(options.stdin) if options.stdin
 
-              ch.eof! if options.file_to_stream.nil?
+              if options.file_to_stream.nil? && options.sudo_password.nil?
+                log :debug, 'Sending EOF to channel'
+                ch.eof!
+              end
 
               ch.on_data do |_, data|
                 response.stdout += data
@@ -127,9 +130,14 @@ module SSHake
                 response.stderr += data.delete("\r")
                 options.stderr&.call(data)
                 log :debug, data
-                if data =~ /^\[sudo\] password for/
+                if options.sudo_password && data =~ /^\[sshake-sudo-password\]:\s\z/
                   log :debug, 'Sending sudo password'
                   ch.send_data "#{options.sudo_password}\n"
+
+                  if options.file_to_stream.nil?
+                    log :debug, 'Sending EOF after sudo password because no file'
+                    ch.eof!
+                  end
                 end
               end
 
