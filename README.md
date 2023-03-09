@@ -1,13 +1,13 @@
 # SSHake 🍼
 
-Sshake is a library to help run commands on SSH servers. It's a wrapper around the net/ssh gem and provide additional functionality and simplity.
+SSHake is a library to help run commands on SSH servers. It's a wrapper around the net/ssh gem and provide additional functionality and simplity.
 
 ## Usage
 
 ```ruby
 # Create a new session by providing the connection options.
 # The same options as supported by net/ssh.
-session = Sshake::Session.create("myserver.domain.com")
+session = SSHake::Session.create("myserver.domain.com")
 
 # Execute a command
 result = session.execute('whoami') do |r|
@@ -49,7 +49,7 @@ result.stderr     # => String
 session.execute("whoami", :sudo => true, :raise_on_error => true)
 
 # You can also pass pre-made execution options to the command.
-execution_options = Sshake::ExecutionOptions.new do |r|
+execution_options = SSHake::ExecutionOptions.new do |r|
   r.sudo
   r.raise_on_error
 end
