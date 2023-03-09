@@ -50,7 +50,7 @@ module SSHake
     # @return [void]
     def connect
       klogger.debug 'Connecting', id: @id, host: @host, user: @user, port: @session_options[:port] || 22
-      @session = Net::SSH.start(@host, user, @session_options)
+      @session = Net::SSH.start(@host, user, **@session_options)
       true
     end
 

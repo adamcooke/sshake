@@ -11,6 +11,12 @@ describe SSHake::Session do
       expect(session.connect).to be true
       expect(session.session).to be_a(Net::SSH::Connection::Session)
     end
+
+    it 'provides session options to Net::SSH' do
+      session = described_class.new(HOST, USER, port: 722, use_agent: true, klogger: Klogger.new(:ssh, destination: '/dev/null'))
+      expect(Net::SSH).to receive(:start).with(HOST, USER, port: 722, use_agent: true)
+      session.connect
+    end
   end
 
   context '#connected?' do
