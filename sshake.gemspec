@@ -17,4 +17,5 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'net-sftp', '>= 2'
   s.add_dependency 'net-ssh', '>= 2'
+  s.add_dependency 'klogger-logger', '>= 1', '< 2'
 end

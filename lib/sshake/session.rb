@@ -23,16 +23,12 @@ module SSHake
     # Create a new SSH session
     #
     # @return [Sshake::Session]
-    def initialize(host, username_or_options = {}, options_with_username = {})
+    def initialize(host, username = nil, **options)
       super
       @host = host
-      if username_or_options.is_a?(String)
-        @user = username_or_options
-        @session_options = options_with_username
-      else
-        @user = username_or_options.delete(:user)
-        @session_options = username_or_options
-      end
+      @username = username
+      @session_options = options
+      @session_options.delete(:klogger)
     end
 
     # Return the username for the connection
@@ -53,8 +49,7 @@ module SSHake
     #
     # @return [void]
     def connect
-      log :debug, "Creating connection to #{@host}"
-      log :debug, "Session options: #{@session_options.inspect}"
+      klogger.debug "Connecting", id: @id, host: @host, user: @user, port: @session_options[:port] || 22
       @session = Net::SSH.start(@host, user, @session_options)
       true
     end
@@ -73,11 +68,11 @@ module SSHake
       return false if @session.nil?
 
       begin
-        log :debug, 'Closing connectiong'
+        klogger.debug "Closing connection", id: @id, host: @host
         @session.close
-        log :debug, 'Connection closed successfully'
+        klogger.debug 'Connection closed', id: @id, host: @host
       rescue StandardError => e
-        log :debug, "Connection not closed: #{e.message} (#{e.class})"
+        logger.exception(e, 'Connection not closed')
         nil
       end
       @session = nil
@@ -86,9 +81,9 @@ module SSHake
 
     # Kill the underlying connection
     def kill!
-      log :debug, 'Attempting kill/shutdown of session'
+      klogger.debug 'Attemping to shutdown', id: @id, host: @host
       @session.shutdown!
-      log :debug, 'Session shutdown success'
+      klogger.debug 'Shutdown success', id: @id, host: @host
       @session = nil
     end
 
@@ -101,79 +96,82 @@ module SSHake
       response.command = command_to_execute
       connect unless connected?
 
-      # Log the command
-      log :info, "Executing: #{command_to_execute}"
-      log :debug, "Timeout: #{options.timeout}"
+      klogger.group(id: @id, host: @host)  do
+        klogger.info "Executing command", command: command_to_execute,  timeout: options.timeout
 
-      begin
-        channel = nil
-        Timeout.timeout(options.timeout) do
-          channel = @session.open_channel do |ch|
-            response.start_time = Time.now
-            channel.exec(command_to_execute) do |_, success|
-              raise "Command \"#{command_to_execute}\" was unable to execute" unless success
+        begin
+          channel = nil
 
-              ch.send_data(options.stdin) if options.stdin
+          Timeout.timeout(options.timeout) do
+            channel = @session.open_channel do |ch|
+              response.start_time = Time.now
 
-              if options.file_to_stream.nil? && options.sudo_password.nil?
-                log :debug, 'Sending EOF to channel'
-                ch.eof!
-              end
 
-              ch.on_data do |_, data|
-                response.stdout += data
-                options.stdout&.call(data)
-                log :debug, data.gsub(/\r/, '')
-              end
+              channel.exec(command_to_execute) do |_, success|
+                raise "Command \"#{command_to_execute}\" was unable to execute" unless success
 
-              ch.on_extended_data do |_, _, data|
-                response.stderr += data.delete("\r")
-                options.stderr&.call(data)
-                log :debug, data
-                if options.sudo_password && data =~ /^\[sshake-sudo-password\]:\s\z/
-                  log :debug, 'Sending sudo password'
-                  ch.send_data "#{options.sudo_password}\n"
+                ch.send_data(options.stdin) if options.stdin
 
-                  if options.file_to_stream.nil?
-                    log :debug, 'Sending EOF after sudo password because no file'
-                    ch.eof!
+                if options.file_to_stream.nil? && options.sudo_password.nil?
+                  klogger.debug 'Sending EOF to channel'
+                  ch.eof!
+                end
+
+                ch.on_data do |_, data|
+                  response.stdout += data
+                  options.stdout&.call(data)
+                  klogger.debug "[stdout] #{data.gsub(/\r/, '').strip}"
+                end
+
+                ch.on_extended_data do |_, _, data|
+                  response.stderr += data.delete("\r")
+                  options.stderr&.call(data)
+                  klogger.debug "[stderr] #{data.gsub(/\r/, '').strip}"
+                  if options.sudo_password && data =~ /^\[sshake-sudo-password\]:\s\z/
+                    klogger.debug "Sending sudo password", length: options.sudo_password.length
+                    ch.send_data "#{options.sudo_password}\n"
+
+                    if options.file_to_stream.nil?
+                      klogger.debug "Sending EOF after password"
+                      ch.eof!
+                    end
                   end
                 end
-              end
 
-              ch.on_request('exit-status') do |_, data|
-                response.exit_code = data.read_long&.to_i
-                log :debug, "Exit code: #{response.exit_code}"
-              end
+                ch.on_request('exit-status') do |_, data|
+                  response.exit_code = data.read_long&.to_i
+                  klogger.info "Exited", exit_code: response.exit_code
+                end
 
-              ch.on_request('exit-signal') do |_, data|
-                response.exit_signal = data.read_long
-              end
+                ch.on_request('exit-signal') do |_, data|
+                  response.exit_signal = data.read_long
+                end
 
-              if options.file_to_stream
-                ch.on_process do |_, data|
-                  next if ch.eof?
+                if options.file_to_stream
+                  ch.on_process do |_, data|
+                    next if ch.eof?
 
-                  if ch.output.length < 128 * 1024
-                    if data = options.file_to_stream.read(1024 * 1024)
-                      ch.send_data(data)
-                      response.bytes_streamed += data.bytesize
-                    else
-                      ch.eof!
+                    if ch.output.length < 128 * 1024
+                      if data = options.file_to_stream.read(1024 * 1024)
+                        ch.send_data(data)
+                        response.bytes_streamed += data.bytesize
+                      else
+                        ch.eof!
+                      end
                     end
                   end
                 end
               end
             end
+            channel.wait
           end
-          channel.wait
+        rescue Timeout::Error
+          klogger.debug "Command timed out"
+          kill!
+          response.timeout!
+        ensure
+          response.finish_time = Time.now
         end
-      rescue Timeout::Error
-        log :debug, 'Got timeout error while executing command'
-        kill!
-        response.timeout!
-      ensure
-        response.finish_time = Time.now
       end
 
       handle_response(response, options)

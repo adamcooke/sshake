@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'sshake/session'
 
 describe SSHake::Session do
-  subject(:session) { SSHake::Session.new(HOST, USER) }
+  subject(:session) { SSHake::Session.new(HOST, USER, klogger: Klogger.new(:ssh, destination: "/dev/null")) }
 
   context '#connect' do
     it 'should connect' do
@@ -138,13 +138,13 @@ describe SSHake::Session do
   context 'logging' do
     it 'should log output' do
       string_io = StringIO.new
-      session.logger = Logger.new(string_io)
+      session.klogger = Klogger.new(:ssh, destination: string_io)
       session.execute('whoami')
       string_io.rewind
       output = string_io.read
-      expect(output).to(match(/\[#{session.id}\] \[#{HOST}\] Executing: whoami/))
-      expect(output).to(match(/\[#{session.id}\] \[#{HOST}\] #{USER}/))
-      expect(output).to(match(/\[#{session.id}\] \[#{HOST}\] Exit code: 0/))
+      expect(output).to include('"message":"Connecting"')
+      expect(output).to include('"message":"Executing command","command":"whoami"')
+      expect(output).to include('"message":"Exited","exit_code":0')
     end
   end
 end

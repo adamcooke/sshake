@@ -68,11 +68,13 @@ session.disconnect
 # without a password.
 session.add_sudo_password "root", "some password"
 
-# For logging purposes, you can provide a logger to your session
-session.logger = Logger.new(STDOUT)
+# For logging purposes, you can provide a logger to your session.
+# This should be an instance of a klogger logger or a something which
+# implementes its interface.
+session.klogger = Klogger.new(:ssh)
 
 # You can also set a global logger if you prefer
-Sshake::Session.logger = Logger.new(STDOUT)
+SSHake::Session.klogger = Klogger.new.new(:ssh, destination: "log/ssh.log")
 
 # You can write data easily too. The 'write' method can receive
 # execution options in the same way as any execute command.
@@ -86,6 +88,12 @@ To install SSHake, you just need to include it in your bundle.
 ```ruby
 gem 'sshake', '~> 1.0'
 ```
+
+## Logging
+
+SSHake uses the [Klogger](https://github.com/krystal/klogger) gem to handle structured logging of commands. You can provide your destination for these logs by providing a suitable value to the `destination` argument when initialising a logger. By default, the logger will log to STDOUT.
+
+Note: this is a breaking change between v1 and v2 of SSHake. In v1 the logger was a simple plain Ruby logger.
 
 ## Testing
 

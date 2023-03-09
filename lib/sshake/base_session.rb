@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 require 'securerandom'
-require 'sshake/logger'
+require 'klogger'
+require 'sshake/klogger'
 require 'sshake/execution_options'
 
 module SSHake
@@ -9,8 +10,8 @@ module SSHake
 
     # A logger for this session
     #
-    # @return [Logger, nil]
-    attr_accessor :logger
+    # @return [Klogger, nil]
+    attr_accessor :klogger
 
     # An ID for this session
     #
@@ -22,8 +23,9 @@ module SSHake
     # @return [Boolean]
     attr_accessor :raise_on_error
 
-    def initialize(*_args)
+    def initialize(*_args, klogger: nil)
       @id = SecureRandom.hex(4)
+      @klogger = klogger || SSHake.klogger
     end
 
     # Connect to the SSH server
@@ -85,17 +87,6 @@ module SSHake
         ExecutionOptions.from_hash(hash)
       else
         ExecutionOptions.new
-      end
-    end
-
-    def log(type, text, _options = {})
-      logger = @logger || SSHake.logger
-      return unless logger
-
-      prefix = "[#{@id}] [#{@host}] "
-
-      text.split(/\n/).each do |line|
-        logger.send(type, prefix + line)
       end
     end
 

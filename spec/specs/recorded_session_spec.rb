@@ -7,7 +7,7 @@ require 'sshake/recorder'
 
 describe SSHake::RecordedSession do
   subject(:recorder) { SSHake::Recorder.new('example') }
-  subject(:session) { SSHake::Session.new(HOST, USER) }
+  subject(:session) { SSHake::Session.new(HOST, USER, klogger: Klogger.new(:ssh, destination: "/dev/null")) }
   subject(:recorded_session) { SSHake::RecordedSession.new(recorder, session) }
 
   context '#execute' do
