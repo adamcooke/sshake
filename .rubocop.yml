@@ -5,6 +5,8 @@ inherit_from:
 Lint/MissingSuper:
   Enabled: false
 
-# Just disabled for now...
 Metrics/MethodLength:
+  Enabled: false
+
+Metrics/BlockLength:
   Enabled: false

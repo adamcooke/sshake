@@ -5,17 +5,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.7
-
-      - name: Configure Bundler
-        run: bundle config set rubygems.pkg.github.com "${{ secrets.KRYSTAL_GITHUB_PACKAGE_READ_KEY }}"
-
       - name: Install dependencies
         run: bundle install
-
       - name: Run linter
         run: bundle exec rubocop
 

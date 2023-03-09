@@ -12,11 +12,11 @@ module SSHake
       attr_accessor :command, :options, :captures
 
       def store
-        @session ? @session.store : nil
+        @session&.store
       end
 
       def written_files
-        @session ? @session.written_files : nil
+        @session&.written_files
       end
 
     end

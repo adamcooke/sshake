@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'sshake/session'
 
 describe SSHake::Session do
-  subject(:session) { SSHake::Session.new(HOST, USER, klogger: Klogger.new(:ssh, destination: "/dev/null")) }
+  subject(:session) { SSHake::Session.new(HOST, USER, klogger: Klogger.new(:ssh, destination: '/dev/null')) }
 
   context '#connect' do
     it 'should connect' do

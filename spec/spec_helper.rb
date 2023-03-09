@@ -4,8 +4,8 @@ $LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
 
 TEST_ROOT = File.expand_path(__dir__)
 
-HOST = ENV['HOST']
-USER = ENV['USER']
+HOST = ENV.fetch('HOST', nil)
+USER = ENV.fetch('USER', nil)
 
 RSpec.configure do |config|
   config.color = true

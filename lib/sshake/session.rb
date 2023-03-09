@@ -35,7 +35,7 @@ module SSHake
     #
     # @return [String]
     def user
-      @user || ENV['USER']
+      @user || ENV.fetch('USER', nil)
     end
 
     # Return the port that will be connected to
@@ -49,7 +49,7 @@ module SSHake
     #
     # @return [void]
     def connect
-      klogger.debug "Connecting", id: @id, host: @host, user: @user, port: @session_options[:port] || 22
+      klogger.debug 'Connecting', id: @id, host: @host, user: @user, port: @session_options[:port] || 22
       @session = Net::SSH.start(@host, user, @session_options)
       true
     end
@@ -68,7 +68,7 @@ module SSHake
       return false if @session.nil?
 
       begin
-        klogger.debug "Closing connection", id: @id, host: @host
+        klogger.debug 'Closing connection', id: @id, host: @host
         @session.close
         klogger.debug 'Connection closed', id: @id, host: @host
       rescue StandardError => e
@@ -87,6 +87,7 @@ module SSHake
       @session = nil
     end
 
+    # rubocop:disable Metrics/AbcSize
     def execute(commands, options = nil, &block)
       options = create_options(options, block)
       command_to_execute = prepare_commands(commands, options)
@@ -96,8 +97,8 @@ module SSHake
       response.command = command_to_execute
       connect unless connected?
 
-      klogger.group(id: @id, host: @host)  do
-        klogger.info "Executing command", command: command_to_execute,  timeout: options.timeout
+      klogger.group(id: @id, host: @host) do
+        klogger.info 'Executing command', command: command_to_execute, timeout: options.timeout
 
         begin
           channel = nil
@@ -105,7 +106,6 @@ module SSHake
           Timeout.timeout(options.timeout) do
             channel = @session.open_channel do |ch|
               response.start_time = Time.now
-
 
               channel.exec(command_to_execute) do |_, success|
                 raise "Command \"#{command_to_execute}\" was unable to execute" unless success
@@ -128,11 +128,11 @@ module SSHake
                   options.stderr&.call(data)
                   klogger.debug "[stderr] #{data.gsub(/\r/, '').strip}"
                   if options.sudo_password && data =~ /^\[sshake-sudo-password\]:\s\z/
-                    klogger.debug "Sending sudo password", length: options.sudo_password.length
+                    klogger.debug 'Sending sudo password', length: options.sudo_password.length
                     ch.send_data "#{options.sudo_password}\n"
 
                     if options.file_to_stream.nil?
-                      klogger.debug "Sending EOF after password"
+                      klogger.debug 'Sending EOF after password'
                       ch.eof!
                     end
                   end
@@ -140,7 +140,7 @@ module SSHake
 
                 ch.on_request('exit-status') do |_, data|
                   response.exit_code = data.read_long&.to_i
-                  klogger.info "Exited", exit_code: response.exit_code
+                  klogger.info 'Exited', exit_code: response.exit_code
                 end
 
                 ch.on_request('exit-signal') do |_, data|
@@ -166,7 +166,7 @@ module SSHake
             channel.wait
           end
         rescue Timeout::Error
-          klogger.debug "Command timed out"
+          klogger.debug 'Command timed out'
           kill!
           response.timeout!
         ensure
@@ -176,6 +176,7 @@ module SSHake
 
       handle_response(response, options)
     end
+    # rubocop:enable Metrics/AbcSize
 
     def write_data(path, data, options = nil, &block)
       connect unless connected?

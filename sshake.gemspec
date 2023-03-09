@@ -15,7 +15,8 @@ Gem::Specification.new do |s|
   s.licenses      = ['MIT']
   s.required_ruby_version = '>= 2.6'
 
+  s.add_dependency 'klogger-logger', '>= 1', '< 2'
   s.add_dependency 'net-sftp', '>= 2'
   s.add_dependency 'net-ssh', '>= 2'
-  s.add_dependency 'klogger-logger', '>= 1', '< 2'
+  s.metadata['rubygems_mfa_required'] = 'true'
 end

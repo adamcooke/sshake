@@ -19,7 +19,7 @@ module SSHake
 
     def message
       "Failed to execute command: #{@response.command} " \
-      "(stderr: #{@response.stderr}) (exit code: #{@response.exit_code})"
+        "(stderr: #{@response.stderr}) (exit code: #{@response.exit_code})"
     end
 
   end
