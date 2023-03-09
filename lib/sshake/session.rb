@@ -23,10 +23,10 @@ module SSHake
     # Create a new SSH session
     #
     # @return [Sshake::Session]
-    def initialize(host, username = nil, **options)
+    def initialize(host, user = nil, **options)
       super
       @host = host
-      @username = username
+      @user = user
       @session_options = options
       @session_options.delete(:klogger)
     end

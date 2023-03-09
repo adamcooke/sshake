@@ -13,8 +13,11 @@ describe SSHake::Session do
     end
 
     it 'provides session options to Net::SSH' do
-      session = described_class.new(HOST, USER, port: 722, use_agent: true, klogger: Klogger.new(:ssh, destination: '/dev/null'))
-      expect(Net::SSH).to receive(:start).with(HOST, USER, port: 722, use_agent: true)
+      session = described_class.new('vm.example.com', 'bernard',
+                                    port: 722,
+                                    use_agent: true,
+                                    klogger: Klogger.new(:ssh, destination: '/dev/null'))
+      expect(Net::SSH).to receive(:start).with('vm.example.com', 'bernard', port: 722, use_agent: true)
       session.connect
     end
   end

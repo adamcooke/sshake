@@ -23,7 +23,7 @@ module SSHake
     # @return [Boolean]
     attr_accessor :raise_on_error
 
-    def initialize(*_args, klogger: nil, **options)
+    def initialize(*_args, klogger: nil, **_options)
       @id = SecureRandom.hex(4)
       @klogger = klogger || SSHake.klogger
     end
