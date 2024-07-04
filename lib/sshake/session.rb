@@ -91,7 +91,7 @@ module SSHake
     def execute(commands, options = nil, &block)
       options = create_options(options, block)
       command_to_execute = prepare_commands(commands, options)
-
+      
       # Execute the command
       response = Response.new
       response.command = command_to_execute

@@ -81,6 +81,10 @@ module SSHake
         raise Error, 'You cannot provide a block and options'
       end
 
+      if hash.is_a?(ExecutionOptions)
+        return hash
+      end
+
       if block
         ExecutionOptions.from_block(&block)
       elsif hash.is_a?(Hash)

@@ -62,6 +62,15 @@ describe SSHake::Session do
       expect(stdout_block).to include("#{USER}\n")
     end
 
+    it 'should receive options as a ExecutionOptions instance' do
+      stdout_block = []
+      opts = SSHake::ExecutionOptions.new do |o|
+        o.stdout { |data| stdout_block << data }
+      end
+      response = session.execute('whoami', opts)
+      expect(stdout_block).to include("#{USER}\n")
+    end
+
     it 'should timeout when timing out' do
       response = session.execute('sleep 7', timeout: 2)
       expect(response.time).to be < 3

@@ -5,6 +5,11 @@ require 'sshake/execution_options_dsl'
 module SSHake
   class ExecutionOptions
 
+    def initialize
+      dsl = ExecutionOptionsDSL.new(self)
+      yield dsl if block_given?
+    end
+
     # The timeout
     #
     # @return [Integer]
